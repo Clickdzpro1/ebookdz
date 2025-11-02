@@ -1,68 +1,223 @@
 const jwt = require('jsonwebtoken');
-const db = require('../config/db');
+const { queryOne } = require('../config/db');
+const { hasPermission, needsApproval } = require('../config/permissions');
+
+// Generate JWT tokens
+const generateTokens = (user) => {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    status: user.status
+  };
+
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '1h'
+  });
+
+  const refreshToken = jwt.sign(
+    { id: user.id }, 
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, 
+    { expiresIn: '7d' }
+  );
+
+  return { accessToken, refreshToken };
+};
 
 // Verify JWT token
-const verifyToken = async (req, res, next) => {
+const verifyToken = (token, secret = process.env.JWT_SECRET) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    return jwt.verify(token, secret);
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      throw new Error('Token has expired');
+    }
+    if (error.name === 'JsonWebTokenError') {
+      throw new Error('Invalid token');
+    }
+    throw new Error('Token verification failed');
+  }
+};
 
-    if (!token) {
+// Authentication middleware
+const authenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Access denied. No token provided.'
+        message: 'Access token required'
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Get user from database
-    const [users] = await db.query(
-      'SELECT user_id, email, full_name, role, status FROM users WHERE user_id = ?',
-      [decoded.userId]
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const decoded = verifyToken(token);
+
+    // Get user from database to ensure they still exist and status is current
+    const user = await queryOne(
+      'SELECT * FROM users WHERE id = ? AND status != ?',
+      [decoded.id, 'suspended']
     );
 
-    if (users.length === 0 || users[0].status !== 'active') {
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token or user inactive'
+        message: 'User not found or suspended'
       });
     }
 
-    req.user = users[0];
+    // Update user info in token if status changed
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      firstName: user.first_name,
+      lastName: user.last_name
+    };
+
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid token',
-      error: error.message
+      message: error.message || 'Authentication failed'
     });
   }
 };
 
-// Check if user is vendor
-const isVendor = (req, res, next) => {
-  if (req.user.role !== 'vendor' && req.user.role !== 'admin') {
+// Optional authentication (for public endpoints that work better with user info)
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const decoded = verifyToken(token);
+      
+      const user = await queryOne(
+        'SELECT * FROM users WHERE id = ? AND status != ?',
+        [decoded.id, 'suspended']
+      );
+
+      if (user) {
+        req.user = {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          firstName: user.first_name,
+          lastName: user.last_name
+        };
+      }
+    }
+    next();
+  } catch (error) {
+    // Continue without user info if token is invalid
+    next();
+  }
+};
+
+// Authorization middleware for role and permission checking
+const authorize = (resource, action) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    // Check if user needs approval (except for reading profile)
+    if (needsApproval(req.user.status) && !(resource === 'profile' && action === 'read')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account pending approval by admin'
+      });
+    }
+
+    // Check permissions
+    if (!hasPermission(req.user.role, resource, action)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions'
+      });
+    }
+
+    next();
+  };
+};
+
+// Require specific role
+const requireRole = (roles) => {
+  const allowedRoles = Array.isArray(roles) ? roles : [roles];
+  
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied for your role'
+      });
+    }
+
+    next();
+  };
+};
+
+// Require approved status
+const requireApproved = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
+  }
+
+  if (req.user.status !== 'approved') {
     return res.status(403).json({
       success: false,
-      message: 'Access denied. Vendor privileges required.'
+      message: 'Account must be approved by admin'
+    });
+  }
+
+  next();
+};
+
+// Admin only middleware
+const adminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Admin access required'
     });
   }
   next();
 };
 
-// Check if user is admin
-const isAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+// Vendor or Admin middleware
+const vendorOrAdmin = (req, res, next) => {
+  if (!req.user || !['vendor', 'admin'].includes(req.user.role)) {
     return res.status(403).json({
       success: false,
-      message: 'Access denied. Admin privileges required.'
+      message: 'Vendor or admin access required'
     });
   }
   next();
 };
 
 module.exports = {
+  generateTokens,
   verifyToken,
-  isVendor,
-  isAdmin
+  authenticate,
+  optionalAuth,
+  authorize,
+  requireRole,
+  requireApproved,
+  adminOnly,
+  vendorOrAdmin
 };

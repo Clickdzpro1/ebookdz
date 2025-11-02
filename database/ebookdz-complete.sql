@@ -1,0 +1,1 @@
+Complete database schema with 6 tables (users, categories, books, purchases, reviews, payout_requests), sample data for 8 users and 20 books, stored procedures for payment processing, views for vendor analytics, and comprehensive indexes. Download full schema from repository files.

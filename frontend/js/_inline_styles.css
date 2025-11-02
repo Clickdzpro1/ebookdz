@@ -1,0 +1,21 @@
+/* Modal Styles */
+.modal{position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)}
+.modal-content{background-color:rgba(255,255,255,.06);margin:10% auto;padding:30px;border-radius:26px;width:90%;max-width:400px;position:relative;border:1px solid rgba(255,255,255,.1)}
+.modal-content h2{margin-bottom:20px;color:#0aa66e}
+.modal-content form{display:flex;flex-direction:column;gap:15px}
+.modal-content input,.modal-content select{padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:rgba(255,255,255,.05);color:white;font-size:16px}
+.modal-content input::placeholder{color:rgba(255,255,255,.6)}
+.close{position:absolute;right:15px;top:15px;font-size:28px;font-weight:bold;color:#aaa;cursor:pointer}
+.close:hover{color:white}
+/* Notifications */
+.notification{position:fixed;top:20px;right:20px;padding:15px 20px;border-radius:10px;color:#fff;z-index:1001;min-width:250px;display:flex;justify-content:space-between;align-items:center}
+.notification--success{background:#0aa66e}.notification--error{background:#d3212c}.notification--info{background:#2196F3}
+.notification button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;margin-left:10px}
+/* Dashboard */
+.dashboard{padding:40px;max-width:1200px;margin:0 auto}
+.dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:30px}
+.dashboard .card{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:25px}
+.dashboard .card h3{margin-bottom:15px;color:#0aa66e}
+.user-item,.book-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.user-item button,.book-item button{padding:5px 10px;margin-left:5px;border:none;border-radius:6px;background:#0aa66e;color:#fff;cursor:pointer;font-size:12px}
+.pending-approval{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:40px}

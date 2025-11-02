@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EBOOKDZ — Read Algeria, Feel Algeria</title>
+  <meta name="description" content="EBOOKDZ: Algeria's modern ebook hub. Beautiful 3D landing page with glassmorphism, animated gradients, and smart UI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --dz-green:#0aa66e; /* Algeria green */
+      --dz-red:#d3212c;   /* Algeria red */
+      --dz-white:#ffffff; /* Algeria white */
+      --ink-900:#0b0f14;
+      --ink-800:#0f141b;
+      --ink-700:#111827;
+      --glass:#0b0f14cc; /* translucent */
+      --muted:#94a3b8;
+      --glow: 0 10px 30px rgba(10,166,110,.35),0 15px 45px rgba(211,33,44,.2);
+      --radius:18px;
+      --radius-lg:26px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";
+      color:var(--dz-white); background: radial-gradient(1200px 1200px at 80% -10%, rgba(10,166,110,.25), transparent 60%),
+      radial-gradient(900px 900px at -10% 90%, rgba(211,33,44,.22), transparent 60%),
+      linear-gradient(180deg, #0a0d12 0%, #0f141b 100%);
+      overflow-x:hidden;
+    }
+
+    /* Animated background gradient fog */
+    .bg-anim{position:fixed; inset:-20% -20% auto -20%; height:80vh; z-index:-2; filter:blur(60px); opacity:.65;}
+    .blob{position:absolute; width:55vmax; height:55vmax; border-radius:50%; mix-blend-mode:screen; animation:blob 22s ease-in-out infinite;}
+    .blob.g{background:radial-gradient(circle at 30% 30%, #15c98a 0%, rgba(21,201,138,.15) 55%, transparent 70%)}
+    .blob.r{background:radial-gradient(circle at 70% 70%, #ff3b47 0%, rgba(255,59,71,.1) 55%, transparent 70%)}
+    .blob.w{background:radial-gradient(circle at 50% 50%, #e6fff6 0%, rgba(230,255,246,.08) 50%, transparent 70%)}
+    .blob.g{left:-10vw; top:-5vh}
+    .blob.r{right:-15vw; top:10vh; animation-delay:-8s}
+    .blob.w{left:30vw; bottom:-15vh; animation-delay:-14s}
+    @keyframes blob{0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(6vw,-4vh) scale(1.06)} 66%{transform:translate(-5vw,5vh) scale(.94)}}
+
+    header.site{
+      position:sticky; top:0; z-index:50; backdrop-filter:saturate(160%) blur(12px);
+      background:linear-gradient(180deg, rgba(11,15,20,.65), rgba(11,15,20,.25) 70%, rgba(11,15,20,0));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .nav{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 22px; max-width:1200px; margin:0 auto}
+    .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.5px}
+    .flag{display:grid; grid-template-columns:1fr 1fr 1fr; width:24px; height:16px; border-radius:3px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    .flag div:nth-child(1){background:var(--dz-green)}
+    .flag div:nth-child(2){background:var(--dz-white); position:relative}
+    .flag div:nth-child(3){background:var(--dz-red)}
+    .crescent{position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+    .crescent::before{content:""; width:10px; height:10px; border:3px solid var(--dz-red); border-radius:50%; box-shadow:inset 4px 0 0 0 var(--dz-white); transform:translateX(-2px)}
+    .nav a{color:#e6f6ef; text-decoration:none; font-weight:600; opacity:.85}
+    .nav a:hover{opacity:1}
+    .cta{display:inline-flex; align-items:center; gap:10px; background:linear-gradient(135deg, var(--dz-green), #12b07b 40%, #1dd498);
+      color:#04130d; border:0; border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:var(--glow); transition:transform .15s ease, box-shadow .2s}
+    .cta:hover{transform:translateY(-1px)}
+
+    .hero{max-width:1200px; margin:0 auto; padding:80px 22px 40px; display:grid; grid-template-columns:1.2fr .8fr; gap:28px; align-items:center}
+    .tag{display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); backdrop-filter:blur(6px); color:#cfece2; font-weight:600}
+    .title{font-size:clamp(34px,5vw,56px); line-height:1.05; margin:14px 0; letter-spacing:-.02em}
+    .subtitle{color:#cde8df; font-weight:500; font-size:18px}
+
+    .hero-card{position:relative; perspective:1200px;}
+    .card3d{position:relative; transform-style:preserve-3d; background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius-lg); padding:26px; min-height:340px; box-shadow:0 10px 30px rgba(0,0,0,.25), var(--glow); overflow:hidden}
+    .depth{position:absolute; inset:auto 0 0 0; height:45%; background:radial-gradient(120% 100% at 50% 100%, rgba(21,201,138,.25), transparent);
+      transform:translateZ(60px); pointer-events:none}
+    .book{position:absolute; right:-30px; bottom:-20px; width:280px; aspect-ratio:3/4; background:linear-gradient(135deg, #0f1b1a, #152925);
+      border-radius:20px; border:1px solid rgba(255,255,255,.06); transform:rotateX(12deg) rotateY(-18deg) rotateZ(-6deg) translateZ(80px); box-shadow:40px 60px 120px rgba(0,0,0,.45)}
+    .book::before{content:"EBOOKDZ"; position:absolute; inset:auto 12px 12px 12px; color:#b5ffe7; letter-spacing:.3em; font-weight:800; opacity:.5}
+    .chips{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+    .chip{padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); color:#def7ef; font-weight:600; font-size:12px}
+
+    .actions{display:flex; gap:12px; margin-top:22px}
+    .ghost{background:transparent; border:1px solid rgba(255,255,255,.14); color:#e9fff7; padding:10px 16px; border-radius:999px; font-weight:700}
+
+    .section{max-width:1200px; margin:0 auto; padding:40px 22px}
+    .grid{display:grid; gap:18px}
+    .grid.cols-3{grid-template-columns:repeat(3, 1fr)}
+    .grid.cols-2{grid-template-columns:repeat(2, 1fr)}
+
+    .glass{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); box-shadow:0 6px 20px rgba(0,0,0,.25)}
+    .card{padding:20px}
+    .kicker{font-weight:800; color:#d7fff2; opacity:.85; letter-spacing:.12em}
+    .muted{color:var(--muted)}
+
+    .feature-card{position:relative; overflow:hidden}
+    .feature-card::after{content:""; position:absolute; inset:0; background:radial-gradient(280px 180px at 10% -5%, rgba(21,201,138,.18), transparent 60%)}
+
+    .three{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px}
+    .three .item{padding:22px; border-radius:16px; background:linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.06); box-shadow:0 8px 26px rgba(0,0,0,.25)}
+
+    .story{display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:center}
+
+    .social{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px}
+    .quote{padding:18px; border-left:4px solid var(--dz-green); border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))}
+
+    .footer{margin:60px auto 40px; text-align:center; color:#b8d9cf}
+
+    @media (max-width: 980px){
+      .hero{grid-template-columns:1fr; padding-top:64px}
+      .book{position:relative; right:auto; bottom:auto; width:100%; transform:rotateX(0) rotateY(0) rotateZ(0) translateZ(0); margin-top:16px}
+      .story{grid-template-columns:1fr}
+      .grid.cols-3{grid-template-columns:1fr}
+      .grid.cols-2{grid-template-columns:1fr}
+      .social{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-anim" aria-hidden="true">
+    <div class="blob g"></div>
+    <div class="blob r"></div>
+    <div class="blob w"></div>
+  </div>
+
+  <header class="site" id="top">
+    <nav class="nav">
+      <div class="brand">
+        <span class="flag" aria-hidden="true"><div></div><div><span class="crescent"></span></div><div></div></span>
+        <span>EBOOKDZ</span>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center">
+        <a href="#features">Features</a>
+        <a href="#stories">Stories</a>
+        <a href="#social">Social Proof</a>
+        <a href="#cta" class="cta">Start Reading</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" aria-label="Hero">
+      <div>
+        <span class="tag">From Algeria • By Readers • For Everyone</span>
+        <h1 class="title">Read Algeria, Feel Algeria — A modern home for your ebooks</h1>
+        <p class="subtitle">Discover, collect, and read Algerian and global ebooks in one elegant, fast, and secure place. Built with love for DZ readers, with 3D motion, glassmorphism, and smart UX.</p>
+        <div class="chips">
+          <span class="chip">Arabic • العربية</span>
+          <span class="chip">Tamazight • ⵜⴰⵎⴰⵣⵉⵖⵜ</span>
+          <span class="chip">French • Français</span>
+          <span class="chip">English</span>
+        </div>
+        <div class="actions">
+          <a class="cta" href="#cta">Get Started Free</a>
+          <a class="ghost" href="#features">See how it works</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="card3d">
+          <div class="depth"></div>
+          <div class="book" aria-hidden="true"></div>
+          <div class="chips" style="position:absolute; top:20px; left:20px; transform:translateZ(60px)">
+            <span class="chip">Offline mode</span>
+            <span class="chip">Private & secure</span>
+            <span class="chip">Fast search</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pain Points -->
+    <section class="section" id="pain">
+      <div class="grid cols-3">
+        <div class="glass card feature-card">
+          <div class="kicker">The struggle</div>
+          <h3>Noisy sites, broken links?</h3>
+          <p class="muted">We built EBOOKDZ to end the headache. One clean hub. No distractions.</p>
+        </div>
+        <div class="glass card feature-card">
+          <div class="kicker">The wait</div>
+          <h3>Slow, heavy downloads?</h3>
+          <p class="muted">Smart compression and CDNs make reading instant across Algeria and MENA.</p>
+        </div>
+        <div class="glass card feature-card">
+          <div class="kicker">The trust</div>
+          <h3>Is it safe?</h3>
+          <p class="muted">Private by design. Your library stays yours, encrypted end‑to‑end.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features 3D Cards -->
+    <section class="section" id="features">
+      <h2 style="margin:0 0 14px">Features that feel like magic</h2>
+      <p class="muted" style="margin:0 0 18px">Built for readers, creators, and communities across Algeria.</p>
+      <div class="three">
+        <div class="item">
+          <h3>3D Shelf</h3>
+          <p class="muted">A delightful 3D bookshelf with physics‑like motion and depth.</p>
+        </div>
+        <div class="item">
+          <h3>Smart Search</h3>
+          <p class="muted">Instant, typo‑tolerant search across titles, authors, and quotes.</p>
+        </div>
+        <div class="item">
+          <h3>Calm Reading</h3>
+          <

@@ -1,5 +1,7 @@
-// API Configuration
-const API_BASE_URL = 'http://localhost:5000/api';
+// API Configuration - Environment aware
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000/api'
+  : 'https://ebookdz-backend.up.railway.app/api'; // Update with your Railway domain
 
 const api = {
   getToken: () => localStorage.getItem('ebookdz_token'),

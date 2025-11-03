@@ -1,81 +1,77 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Database connection pool configuration
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'ebookdz',
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true,
-  charset: 'utf8mb4'
-};
+// Create PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-// Create connection pool
-const pool = mysql.createPool(dbConfig);
-
-// Test database connection
+// Test connection
 const testConnection = async () => {
   try {
-    const connection = await pool.getConnection();
-    console.log('🇩🇿 Database connected successfully');
+    const client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    console.log('🇩🇿 PostgreSQL connected successfully');
     
-    // Test query
-    const [rows] = await connection.execute('SELECT COUNT(*) as user_count FROM users');
-    console.log(`📊 Users in database: ${rows[0].user_count}`);
+    // Test query to count users
+    const userCount = await client.query('SELECT COUNT(*) as user_count FROM users');
+    console.log(`📊 Users in database: ${userCount.rows[0].user_count}`);
     
-    connection.release();
+    client.release();
     return true;
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+  } catch (err) {
+    console.error('❌ PostgreSQL connection failed:', err.message);
     return false;
   }
 };
 
-// Execute query with error handling
-const query = async (sql, params = []) => {
+// Query helper - returns array of rows
+const query = async (text, params = []) => {
+  const client = await pool.connect();
   try {
-    const [results] = await pool.execute(sql, params);
-    return results;
+    const result = await client.query(text, params);
+    return result.rows;
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
+  } finally {
+    client.release();
   }
 };
 
-// Get single row
-const queryOne = async (sql, params = []) => {
+// Query single row helper
+const queryOne = async (text, params = []) => {
+  const client = await pool.connect();
   try {
-    const [results] = await pool.execute(sql, params);
-    return results[0] || null;
+    const result = await client.query(text, params);
+    return result.rows[0] || null;
   } catch (error) {
     console.error('Database queryOne error:', error);
     throw error;
+  } finally {
+    client.release();
   }
 };
 
-// Transaction wrapper
+// Transaction helper
 const transaction = async (callback) => {
-  const connection = await pool.getConnection();
-  await connection.beginTransaction();
-  
+  const client = await pool.connect();
   try {
-    const result = await callback(connection);
-    await connection.commit();
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
     return result;
-  } catch (error) {
-    await connection.rollback();
-    throw error;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   } finally {
-    connection.release();
+    client.release();
   }
 };
 
